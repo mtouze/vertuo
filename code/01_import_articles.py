@@ -46,8 +46,8 @@ def cleanText(s):
         cleanString = re.sub(re.compile("\s"), " ", cleanString)
         # Trunc text
         cleanString = re.findall("(^[\w\W]*?onseil) .fusion", cleanString)[0]
-        # Remove datetime
-        #cleanString = re.sub(re.compile("VERTUO\d{4}-\d{2}-\d{2}.*?d{2}:\d{2}", " ", cleanString))
+        # Remove datetime / title
+        cleanString = re.sub(re.compile("^[\s\S]*?Project Description "), "", cleanString)
         return cleanString
     except:
         return None
@@ -69,10 +69,11 @@ for page in pageDict.keys():
 
 # Convert dictionnary to dataframe
 df = pd.DataFrame(list(d_article.items()), columns = ["link", "article"])
-df.head()
+df.set_index("link", inplace = True)
 
 # Write text files
 df.to_csv(
         "C:/Users/micha/Documents/Python Scripts/vertuo/articles.csv",
-        sep = "\t",
-        encoding = "utf-8")
+        sep = ",",
+        encoding = "utf-8",
+        quoting = 1)
