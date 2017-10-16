@@ -18,7 +18,7 @@ htmlText = htmlText.decode("utf-8", "ignore")
 pattern = re.compile("http://www.vertuoconseil.com/portfolio/[\w-]{1,}/")
 pageList = list(set(re.findall(pattern, htmlText)))
 pageDict = dict(zip(pageList, [False] * len(pageList)))
-pageDict
+print(pageDict)
 
 
 # Retrieving articles
@@ -30,6 +30,7 @@ def getArtileTag(s):
     except:
         return None
     
+# Remove tags in html code
 def removeTags(s):
     tags = re.compile("<.*?>")
     try:
@@ -37,6 +38,7 @@ def removeTags(s):
     except:
         return None
 
+# Remove special car & get article content
 def cleanText(s):
     #endArticleRe = re.compile("^.*?Conseil")
     try:
@@ -53,7 +55,6 @@ def cleanText(s):
         return None
 
 d_article = {}
-
 for page in pageDict.keys():
     req = urllib.request.Request(page, headers = {"User-agent": "Mozilla/5.0"})
     htmlPage = urllib.request.urlopen(req)
@@ -62,8 +63,8 @@ for page in pageDict.keys():
     article = getArtileTag(htmlText)
     article = removeTags(article)
     article = cleanText(article)
-    article
-        
+
+    # Stock article in dic
     d_article[page] = article
 
 
@@ -71,7 +72,7 @@ for page in pageDict.keys():
 df = pd.DataFrame(list(d_article.items()), columns = ["link", "article"])
 df.set_index("link", inplace = True)
 
-# Write text files
+# Save in text file
 df.to_csv(
         "C:/Users/micha/Documents/Python Scripts/vertuo/articles.csv",
         sep = ",",
