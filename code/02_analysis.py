@@ -14,14 +14,13 @@ import string
 
 df["article"] = df["article"].str.lower()
 
-d_punc = {ord (string.punctuation[i]): " " for i in range (0, len (string.punctuation))}
+d_punc = {ord (string.punctuation[i]): " " for i in range(0, len(string.punctuation))}
 df["article"] = df["article"].str.translate(d_punc)
 
-d_digits = {ord (string.digits[i]): "" for i in range (0, len (string.digits))}
+d_digits = {ord (string.digits[i]): "" for i in range(0, len(string.digits))}
 df["article"] = df["article"].str.translate(d_digits)
 
 df.dropna(inplace = True)
-
         
 # Stemming
 """
@@ -60,7 +59,7 @@ CV = CountVectorizer(
         decode_error = "ignore", 
         stop_words = stopWords,
         lowercase = True,
-        max_df = 0.75,
+        max_df = 2/3,
         max_features = maxFeatures)
 articlesCV = CV.fit_transform (articles)
 
@@ -85,12 +84,21 @@ import matplotlib.pyplot as plt
 
 G = nx.Graph()
 
-plt.subplot(111)
 nodeLabels = CV.get_feature_names()
 for row in range(0, len(nodeLabels)):
-    G.add_node(nodeLabels[row], label = nodeLabels[row])
     G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]])
     G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]])
-    
-nx.draw(G, with_labels = True)
+
+d = G.degree()
+nodeColor = []
+for e in d.keys():
+    cmap = plt.get_cmap("Blues")
+    color = d[e]/max(d.values())
+    nodeColor.append(cmap(color))
+
+nx.draw(
+        G,
+        with_labels = True, 
+        node_color = nodeColor,
+        node_size = [n * 100 for n in d.values()])
 plt.show()
