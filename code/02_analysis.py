@@ -49,17 +49,18 @@ for word in range (0, len (tags)):
 #
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from nltk.corpus import stopwords
+from stop_words import get_stop_words
 
-stopWords = stopwords.words("french")
+stopWords = stopwords.words("french") + get_stop_words("french")
 articles = df["article"]
 maxFeatures = 100
 
 CV = CountVectorizer(
         encoding = "utf-8",
         decode_error = "ignore", 
-        strip_accents = "ascii",
         stop_words = stopWords,
         lowercase = True,
+        max_df = 0.75,
         max_features = maxFeatures)
 articlesCV = CV.fit_transform (articles)
 
@@ -80,13 +81,16 @@ dist = cosine_similarity (articlesCV.T)
 
 # Adjacency matrix
 import networkx as nx
-import matplotlib as mlp
+import matplotlib.pyplot as plt
 
 G = nx.Graph()
 
+plt.subplot(111)
 nodeLabels = CV.get_feature_names()
 for row in range(0, len(nodeLabels)):
     G.add_node(nodeLabels[row], label = nodeLabels[row])
     G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]])
+    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]])
     
 nx.draw(G, with_labels = True)
+plt.show()
