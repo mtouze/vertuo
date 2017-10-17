@@ -50,7 +50,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from nltk.corpus import stopwords
 from stop_words import get_stop_words
 
-stopWords = stopwords.words("french") + get_stop_words("french")
+stopWords = list(set(stopwords.words("french") + get_stop_words("french")))
 articles = df["article"]
 maxFeatures = 100
 
@@ -86,8 +86,11 @@ G = nx.Graph()
 
 nodeLabels = CV.get_feature_names()
 for row in range(0, len(nodeLabels)):
-    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]])
-    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]])
+    print(dist[row,:dist[row,:].argsort()[-2]])
+    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]], weight = dist[row, dist[row,:].argsort()[-2]])
+    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]], weight = dist[row, dist[row,:].argsort()[-3]])
+
+edgeWidth = [G[u][v]["weight"] * 2 for u, v in G.edges()]
 
 d = G.degree()
 nodeColor = []
@@ -96,9 +99,12 @@ for e in d.keys():
     color = d[e]/max(d.values())
     nodeColor.append(cmap(color))
 
+pos= nx.spring_layout(G, k = 0.15, iterations = 20)
 nx.draw(
         G,
+        pos = pos,
         with_labels = True, 
         node_color = nodeColor,
-        node_size = [n * 100 for n in d.values()])
+        node_size = [n * 100 for n in d.values()],
+        width = edgeWidth)
 plt.show()
