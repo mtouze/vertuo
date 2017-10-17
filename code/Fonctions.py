@@ -8,20 +8,20 @@ from nltk.corpus import stopwords
 import codecs
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-
+import string
 
 
 def RecupMostFreq (article):
     #Supression de la ponctuation
-    ponctuation = [";","!",",",".","?","'","[","]","(",")","{","}","»","«","–",":","’","%","&"]
+    ponctuation = string.punctuation + "»«"
     for i in article :
         if i in ponctuation :
-            article=article.replace(i,' ')
+            article = article.replace(i,' ')
     #On mets tous les mots en minsucules pour éviter les doublons 
     #entre La et la par exemple
-    article=article.lower()
+    article = article.lower()
     #On récupère les mots en supprimant les espaces dans le texte 
-    token=WhitespaceTokenizer().tokenize(article)
+    token = WhitespaceTokenizer().tokenize(article)
     """
     Si besoin de télécharger le package stopwords
     nltk.download("stopwords")
