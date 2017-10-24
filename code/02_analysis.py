@@ -2,11 +2,8 @@ import pandas as pd
 import numpy as np
 
 link = "https://raw.githubusercontent.com/mtouze/vertuo/master/data/articles.csv"
-df = pd.read_csv(
-        link, 
-        quoting = 1, 
-        encoding = "utf-8")
-print (df.head())
+df = pd.read_csv(link, quoting = 1, encoding = "utf-8")
+print(df.head())
 
 
 # Punctations & others
@@ -23,12 +20,39 @@ df["article"] = df["article"].str.translate(d_digits)
 df.dropna(inplace = True)
         
 # Stemming
-"""
 from nltk.stem.snowball import FrenchStemmer
-stemmer = FrenchStemmer ()
-for word in df ["article"].iloc[4].split (" "):
-    print (stemmer.stem (word))
-"""
+from collections import Counter
+
+stemmer = FrenchStemmer()
+articles = df["article"]
+
+wordCount = Counter()
+for article in articles:
+    wordCount.update(article.split())
+    
+stemDict = dict()
+for word in wordCount.keys():
+    stemWord = stemmer.stem(word)
+    if stemWord not in stemDict.keys():
+        stemDict[stemWord] = [(word, wordCount[word])]
+    else:
+        stemDict[stemWord].append((word, wordCount[word]))
+
+stemDictClean = dict()
+for stemWord in stemDict.keys():
+    maxCount = 0
+    for e in stemDict[stemWord]:
+        if e[1] > maxCount:
+            stemDictClean[stemWord] = e[0]
+            maxCount = e[1]
+
+df["stemArticle"] = np.nan
+for i, article in enumerate(articles):
+    stemArticle = ""
+    for word in article.split():
+        stemWord = stemmer.stem(word)
+        stemArticle = stemArticle + " " + stemDictClean[stemWord]
+    df["stemArticle"].iloc[i] = stemArticle
 
 # Lemmatisation
 """
@@ -50,8 +74,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from nltk.corpus import stopwords
 from stop_words import get_stop_words
 
-stopWords = list(set(stopwords.words("french") + get_stop_words("french")))
-articles = df["article"]
+stopWords = stopwords.words("french") + get_stop_words("french")
+stemArticles = df["stemArticle"]
 maxFeatures = 100
 
 CV = CountVectorizer(
@@ -59,9 +83,10 @@ CV = CountVectorizer(
         decode_error = "ignore", 
         stop_words = stopWords,
         lowercase = True,
-        max_df = 2/3,
+        max_df = 0.9,
+        min_df = 0.1,
         max_features = maxFeatures)
-articlesCV = CV.fit_transform (articles)
+articlesCV = CV.fit_transform (stemArticles)
 
 
 TfidfV = TfidfVectorizer(
@@ -71,7 +96,7 @@ TfidfV = TfidfVectorizer(
         stop_words = stopWords,
         max_features = maxFeatures,
         use_idf = True)
-articlesTfidfV = TfidfV.fit_transform(articles)
+articlesTfidfV = TfidfV.fit_transform(stemArticles)
 
 
 # cosine similiarity
@@ -86,11 +111,8 @@ G = nx.Graph()
 
 nodeLabels = CV.get_feature_names()
 for row in range(0, len(nodeLabels)):
-    print(dist[row,:dist[row,:].argsort()[-2]])
-    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]], weight = dist[row, dist[row,:].argsort()[-2]])
-    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]], weight = dist[row, dist[row,:].argsort()[-3]])
-
-edgeWidth = [G[u][v]["weight"] * 2 for u, v in G.edges()]
+    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]])
+    G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]])
 
 d = G.degree()
 nodeColor = []
@@ -99,12 +121,9 @@ for e in d.keys():
     color = d[e]/max(d.values())
     nodeColor.append(cmap(color))
 
-pos= nx.spring_layout(G, k = 0.15, iterations = 20)
 nx.draw(
         G,
-        pos = pos,
         with_labels = True, 
         node_color = nodeColor,
-        node_size = [n * 100 for n in d.values()],
-        width = edgeWidth)
+        node_size = [n * 100 for n in d.values()])
 plt.show()
