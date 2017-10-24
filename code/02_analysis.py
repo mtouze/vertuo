@@ -9,16 +9,29 @@ print(df.head())
 # Punctations & others
 import string
 
+## Lower case
 df["article"] = df["article"].str.lower()
 
-d_punc = {ord (string.punctuation[i]): " " for i in range(0, len(string.punctuation))}
-df["article"] = df["article"].str.translate(d_punc)
+## Remove punctuations
+punctDict = {ord(string.punctuation[i]): " " for i in range(0, len(string.punctuation))}
+df["article"] = df["article"].str.translate(punctDict)
 
-d_digits = {ord (string.digits[i]): "" for i in range(0, len(string.digits))}
-df["article"] = df["article"].str.translate(d_digits)
+## Remove digits
+digitsDict = {ord(string.digits[i]): "" for i in range(0, len(string.digits))}
+df["article"] = df["article"].str.translate(digitsDict)
 
+## Remove accent
+eList = "éèêë"
+aList = "àâä"
+eDict = {ord(eList[i]): "e" for i in range(0, len(eList))}
+aDict = {ord(aList[i]): "a" for i in range(0, len(aList))}
+
+df["article"] = df["article"].str.translate(eDict).str.translate(aDict)
+
+## Remove NA articles
 df.dropna(inplace = True)
-        
+
+
 # Stemming
 from nltk.stem.snowball import FrenchStemmer
 from collections import Counter
@@ -83,8 +96,6 @@ CV = CountVectorizer(
         decode_error = "ignore", 
         stop_words = stopWords,
         lowercase = True,
-        max_df = 0.9,
-        min_df = 0.1,
         max_features = maxFeatures)
 articlesCV = CV.fit_transform (stemArticles)
 
@@ -101,7 +112,7 @@ articlesTfidfV = TfidfV.fit_transform(stemArticles)
 
 # cosine similiarity
 from sklearn.metrics.pairwise import cosine_similarity
-dist = cosine_similarity (articlesCV.T)
+dist = cosine_similarity (articlesCV)
 
 # Adjacency matrix
 import networkx as nx
@@ -109,7 +120,10 @@ import matplotlib.pyplot as plt
 
 G = nx.Graph()
 
-nodeLabels = CV.get_feature_names()
+#nodeLabels = CV.get_feature_names()
+import re
+df["title"] = df["link"].str.extract(re.compile("/portfolio/(.*?)/")).str.replace("-", " ")
+nodeLabels = [title for title in df["title"]]
 for row in range(0, len(nodeLabels)):
     G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-2]])
     G.add_edge(nodeLabels[row], nodeLabels[dist[row,:].argsort()[-3]])
@@ -123,6 +137,7 @@ for e in d.keys():
 
 nx.draw(
         G,
+        pos = nx.spring_layout(G),
         with_labels = True, 
         node_color = nodeColor,
         node_size = [n * 100 for n in d.values()])
