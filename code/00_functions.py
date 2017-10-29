@@ -1,3 +1,34 @@
+def corpusCleaning(
+        corpus,
+        lower_case = True,
+        remove_accents = True,
+        remove_digits = True,
+        remove_punctuations = True):
+    
+    import string
+    
+    if lower_case:
+        corpus = corpus.str.lower()
+    
+    if remove_punctuations:
+        listPunc = string.punctuation + "’"
+        punctDict = {ord(listPunc[i]): " " for i in range(0, len(listPunc))}
+        corpus = corpus.str.translate(punctDict)
+        
+    if remove_digits:
+        digitsDict = {ord(string.digits[i]): "" for i in range(0, len(string.digits))}
+        corpus = corpus.str.translate(digitsDict)
+        
+    if remove_accents:
+        eList = "éèêë"
+        aList = "àâä"
+        eDict = {ord(eList[i]): "e" for i in range(0, len(eList))}
+        aDict = {ord(aList[i]): "a" for i in range(0, len(aList))}
+        corpus = corpus.str.translate(eDict).str.translate(aDict)
+        
+    return corpus
+
+
 def DictMostFrequentStemWord(corpus):
 
     from collections import Counter
