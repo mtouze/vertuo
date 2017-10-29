@@ -32,32 +32,10 @@ df["article"] = df["article"].str.translate(eDict).str.translate(aDict)
 df.dropna(inplace = True)
 
 
+stemDict = DictMostFrequentStemWord(df["article"])
+
+
 # Stemming
-from nltk.stem.snowball import FrenchStemmer
-from collections import Counter
-
-stemmer = FrenchStemmer()
-articles = df["article"]
-
-wordCount = Counter()
-for article in articles:
-    wordCount.update(article.split())
-    
-stemDict = dict()
-for word in wordCount.keys():
-    stemWord = stemmer.stem(word)
-    if stemWord not in stemDict.keys():
-        stemDict[stemWord] = [(word, wordCount[word])]
-    else:
-        stemDict[stemWord].append((word, wordCount[word]))
-
-stemDictClean = dict()
-for stemWord in stemDict.keys():
-    maxCount = 0
-    for e in stemDict[stemWord]:
-        if e[1] > maxCount:
-            stemDictClean[stemWord] = e[0]
-            maxCount = e[1]
 
 df["stemArticle"] = np.nan
 for i, article in enumerate(articles):
