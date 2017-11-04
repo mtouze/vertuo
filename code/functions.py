@@ -11,7 +11,7 @@ def corpusCleaning(
         corpus = corpus.str.lower()
     
     if remove_punctuations:
-        listPunc = string.punctuation + "’"
+        listPunc = string.punctuation + "’–"
         punctDict = {ord(listPunc[i]): " " for i in range(0, len(listPunc))}
         corpus = corpus.str.translate(punctDict)
         

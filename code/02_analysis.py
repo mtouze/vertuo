@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import re
 
-
 link = "https://raw.githubusercontent.com/mtouze/vertuo/master/data/articles.csv"
 df = pd.read_csv(link, quoting = 1, encoding = "utf-8")
 print(df.head())
@@ -56,11 +55,14 @@ from stop_words import get_stop_words
 stopWords = stopwords.words("french") + get_stop_words("french")
 maxFeatures = 100
 
+nbArticles = len(corpus)
 CV = CountVectorizer(
         encoding = "utf-8",
         decode_error = "ignore", 
         stop_words = stopWords,
         lowercase = True,
+        max_df = nbArticles*0.5,
+        min_df = nbArticles*0.1,
         max_features = maxFeatures)
 articlesCV = CV.fit_transform (corpus)
 
@@ -77,7 +79,7 @@ articlesTfidfV = TfidfV.fit_transform(stemArticles)
 
 # cosine similiarity
 from sklearn.metrics.pairwise import cosine_similarity
-dist = cosine_similarity (articlesCV.T)
+dist = cosine_similarity(articlesCV.T)
 
 # Adjacency matrix
 import networkx as nx
