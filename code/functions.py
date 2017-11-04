@@ -3,30 +3,36 @@ def corpusCleaning(
         lower_case = True,
         remove_accents = True,
         remove_digits = True,
-        remove_punctuations = True):
+        remove_punctuations = True,
+        remove_blanks = True):
     
     import string
+    import unidecode
+    import re
+    
+    ans = corpus.copy()
     
     if lower_case:
-        corpus = corpus.str.lower()
+        ans = ans.str.lower()
     
     if remove_punctuations:
-        listPunc = string.punctuation + "’"
+        listPunc = string.punctuation.replace("-","") + "’…–>«»"
         punctDict = {ord(listPunc[i]): " " for i in range(0, len(listPunc))}
-        corpus = corpus.str.translate(punctDict)
+        ans = ans.str.translate(punctDict)
         
     if remove_digits:
         digitsDict = {ord(string.digits[i]): "" for i in range(0, len(string.digits))}
-        corpus = corpus.str.translate(digitsDict)
+        ans = ans.str.translate(digitsDict)
         
     if remove_accents:
-        eList = "éèêë"
-        aList = "àâä"
-        eDict = {ord(eList[i]): "e" for i in range(0, len(eList))}
-        aDict = {ord(aList[i]): "a" for i in range(0, len(aList))}
-        corpus = corpus.str.translate(eDict).str.translate(aDict)
+        for i, article in enumerate(ans):
+            ans[i] = unidecode.unidecode(article)
+            
+    if remove_blanks:
+        for i, article in enumerate(ans):
+            ans[i] = re.sub(" +", " ", article)
         
-    return corpus
+    return ans
 
 
 def DictMostFrequentStemWord(corpus):
@@ -58,5 +64,10 @@ def DictMostFrequentStemWord(corpus):
                 if e[0] < stemDictClean[stemWord]:
                     stemDictClean[stemWord] = e[0]
                     maxCount = e[1]
-
-    return stemDictClean
+                
+    cleanDict = dict()
+    for word in wordsCount.keys():
+        stemWord = stemmer.stem(word)
+        cleanDict[" " + word + " "] = " " + stemDictClean[stemWord] + " "
+        
+    return cleanDict
